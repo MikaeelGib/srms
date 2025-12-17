@@ -1,0 +1,35 @@
+import { Router } from "express";
+import {
+  createStudent,
+  getStudentById,
+  getStudents,
+  updateStudent,
+  deleteStudent,
+  addStudentRecord,
+  updateRecordStatus
+} from "../controllers/studentController";
+
+const router = Router();
+
+// Create student
+router.post("/", createStudent);
+
+// Get all students
+router.get("/", getStudents);
+
+// Get student by ID
+router.get("/:studentId", getStudentById);
+
+// Update student
+router.put("/:studentId", updateStudent);
+
+// Delete student
+router.delete("/:studentId", deleteStudent);
+
+// Add record to student
+router.post("/:studentId/records", addStudentRecord);
+
+//Update record status
+router.patch("/:studentId/records/:recordId/status", updateRecordStatus);
+
+export default router;
