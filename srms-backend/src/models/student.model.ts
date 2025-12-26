@@ -16,6 +16,7 @@ export interface IStudent extends Document {
   email?: string;
   password?: string;
   department?: string;
+  role: "student" | "admin";
   records: IRecord[];
   createdAt: Date;
   updatedAt: Date;
@@ -45,6 +46,10 @@ const StudentSchema = new Schema<IStudent>(
     email: { type: String },
     password: { type: String },
     department: { type: String },
+    role: {
+       type: String,
+       enum: ["student", "admin"], 
+       default: "student" },
     records: { type: [RecordSchema], default: [] }
   },
   { timestamps: true }

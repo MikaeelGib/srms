@@ -9,6 +9,7 @@ import {
   updateRecordStatus,
   addRecordOnChain
 } from "../controllers/studentController";
+import { requireAuth, requireAdmin } from "../middlewares/authMiddleware";  
 
 const router = Router();
 
@@ -34,6 +35,17 @@ router.post("/:studentId/records", addStudentRecord);
 router.post("/:studentId/records/onchain", addRecordOnChain);
 
 //Update record status
-router.patch("/:studentId/records/:recordId/status", updateRecordStatus);
+router.patch("/:studentId/records/:recordId/status", 
+  updateRecordStatus,
+  requireAdmin,
+  requireAuth
+);
+
+router.post("/:studentId/records/onchain", 
+  addRecordOnChain,
+  requireAdmin,
+  requireAuth
+);
+
 
 export default router;
