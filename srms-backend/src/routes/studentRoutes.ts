@@ -6,7 +6,8 @@ import {
   updateStudent,
   deleteStudent,
   addStudentRecord,
-  updateRecordStatus
+  updateRecordStatus,
+  addRecordOnChain
 } from "../controllers/studentController";
 
 const router = Router();
@@ -28,6 +29,9 @@ router.delete("/:studentId", deleteStudent);
 
 // Add record to student
 router.post("/:studentId/records", addStudentRecord);
+
+// Add record on blockchain
+router.post("/:studentId/records/onchain", addRecordOnChain);
 
 //Update record status
 router.patch("/:studentId/records/:recordId/status", updateRecordStatus);

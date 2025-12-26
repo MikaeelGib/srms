@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { StudentService } from "../services/studentService";
+import { BlockchainService } from "../services/blockchainService";
 
 // GET /api/students
 export const getStudents = async (_req: Request, res: Response) => {
@@ -135,6 +136,62 @@ export const addStudentRecord = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to add record" });
   }
 };
+
+// POST /api/students/:studentId/records/onchain
+export const addRecordOnChain = async (req: Request, res: Response) => {
+  try {
+    const studentId = req.params.studentId.trim();
+    const { recordId } = req.body;
+
+    if (!recordId) {
+      return res.status(400).json({ message: "recordId is required" });
+    }
+
+    //  Check student exists
+    const student = await StudentService.getStudentById(studentId);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    // Check if record is verified
+    const record = student.records.find((r) => r.recordId === recordId);
+    if (!record || record.status !== "verified") {
+      return res.status(400).json({
+        message: "Record must be verified before adding to blockchain",
+      });
+    }
+
+    //  Prevent duplicate record
+    const duplicate = student.records.some(
+      (r) => r.recordId === recordId
+    );
+
+    if (duplicate) {
+      return res.status(409).json({
+        message: "Record already exists for this student",
+      });
+    }
+
+    // 3️⃣ Write to blockchain
+    const result = await BlockchainService.addRecord(studentId, recordId);
+
+    // 4️⃣ Save record in MongoDB
+    const updatedStudent = await StudentService.addRecordToStudent(studentId, {
+      recordId,
+      blockchainTxHash: result.txHash,
+      status: "on-chain",
+    });
+
+    res.status(201).json({
+      message: "Record added on blockchain",
+      txHash: result.txHash,
+      student: updatedStudent,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Blockchain transaction failed" });
+  }
+};
+
 
 // PATCH /api/students/:studentId/records/:recordId/status
 export const updateRecordStatus = async (req: Request, res: Response) => {
