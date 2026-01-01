@@ -1,7 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+interface AuthRequest extends Request {
+  user?: {
+    id?: string;
+    role?: string;
+  };
+}
+
+export const requireAuth = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   const header = req.headers.authorization;
 
   if (!header || !header.startsWith("Bearer ")) {
@@ -10,7 +21,11 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
 
   try {
     const token = header.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+      id: string;
+      role: string;
+    };
+
     req.user = decoded;
     next();
   } catch {
@@ -19,11 +34,11 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
 };
 
 export const requireAdmin = (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
-  if (req.user.role !== "admin") {
+  if (req.user?.role !== "admin") {
     return res.status(403).json({ message: "Admin access required" });
   }
   next();

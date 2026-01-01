@@ -2,8 +2,8 @@ import StudentList from "../components/StudentList";
 
 export default function StudentsPage() {
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Student Records Management System</h1>
+    <div style={{ padding: 20 }}>
+      <h1>Students</h1>
       <StudentList />
     </div>
   );
