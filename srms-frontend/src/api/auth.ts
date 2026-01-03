@@ -1,12 +1,15 @@
-export function isAdmin(): boolean {
-  return localStorage.getItem("role") === "admin";
-}
+import axios from "axios";
 
-export function isLoggedIn(): boolean {
-  return !!localStorage.getItem("token");
-}
+const API_URL = "http://localhost:5000/api/auth";
 
-export function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("role");
-}
+export const login = async (email: string, password: string) => {
+  const res = await axios.post(`${API_URL}/login`, {
+    email,
+    password,
+  });
+
+  // backend returns token
+  localStorage.setItem("token", res.data.token);
+
+  return res.data;
+};

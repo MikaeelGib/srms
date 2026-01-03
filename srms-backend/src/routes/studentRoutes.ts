@@ -13,11 +13,12 @@ import { requireAuth, requireAdmin } from "../middlewares/authMiddleware";
 
 const router = Router();
 
-// Get all students
-router.get("/", getStudents);
 
-// Get student by ID
-router.get("/:studentId", getStudentById);
+// Get student by ID - Authenticated users
+router.get("/:studentId", requireAuth, getStudentById);
+
+// ADMIN ONLY - Get all students
+router.get("/", requireAuth, requireAdmin, getStudents);
 
 // ADMIN ONLY - Create student
 router.post("/", requireAuth, requireAdmin, createStudent);
