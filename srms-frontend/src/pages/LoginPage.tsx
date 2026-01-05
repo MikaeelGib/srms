@@ -1,55 +1,139 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { login } from "../api/auth";
+import { isAuthenticated } from "../utils/auth";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  async function handleSubmit(e: React.FormEvent) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // If already logged in → redirect
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate("/students");
+    }
+  }, [navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
-    const res = await fetch("http://localhost:5000/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!res.ok) {
-      alert("Invalid credentials");
+    if (!email || !password) {
+      setError("Please enter email and password");
       return;
     }
 
-    const data = await res.json();
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("role", data.role);
-
-    navigate("/students");
-  }
+    try {
+      setLoading(true);
+      await login(email, password);
+      navigate("/students");
+    } catch (err: unknown) {
+      // Narrow unknown error to a shape that may come from the API (e.g. axios)
+      type ApiError = { response?: { data?: { message?: string } } };
+      const apiErr = err as ApiError;
+      const message = apiErr?.response?.data?.message ?? (err instanceof Error ? err.message : undefined);
+      setError(message || "Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Admin Login</h1>
+    <div style={styles.container}>
+      <form onSubmit={handleSubmit} style={styles.card}>
+        <h2 style={styles.title}>Admin Login</h2>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        />
-        <br />
+        {error && <div style={styles.error}>{error}</div>}
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        />
-        <br />
+        <div style={styles.field}>
+          <label>Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="admin@example.com"
+            style={styles.input}
+          />
+        </div>
 
-        <button type="submit">Login</button>
+        <div style={styles.field}>
+          <label>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            style={styles.input}
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            ...styles.button,
+            opacity: loading ? 0.7 : 1,
+            cursor: loading ? "not-allowed" : "pointer",
+          }}
+        >
+          {loading ? "Logging in..." : "Login"}
+        </button>
       </form>
     </div>
   );
 }
+
+/* ------------------ Styles ------------------ */
+
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    minHeight: "80vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  card: {
+    width: 360,
+    padding: 24,
+    border: "1px solid #ddd",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+  },
+  title: {
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  field: {
+    display: "flex",
+    flexDirection: "column",
+    marginBottom: 12,
+  },
+  input: {
+    padding: 8,
+    fontSize: 14,
+    borderRadius: 4,
+    border: "1px solid #ccc",
+  },
+  button: {
+    width: "100%",
+    padding: 10,
+    marginTop: 12,
+    fontSize: 16,
+    borderRadius: 4,
+    border: "none",
+    backgroundColor: "#1976d2",
+    color: "#fff",
+  },
+  error: {
+    backgroundColor: "#fdecea",
+    color: "#b71c1c",
+    padding: 8,
+    marginBottom: 12,
+    borderRadius: 4,
+    fontSize: 14,
+  },
+};
