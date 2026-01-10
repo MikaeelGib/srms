@@ -3,6 +3,10 @@ import { getToken } from "../utils/auth";
 
 const API_BASE = "http://localhost:5000/api/students";
 
+/* ===========================
+   STUDENTS
+=========================== */
+
 export async function getAllStudents(): Promise<Student[]> {
   const res = await fetch(API_BASE, {
     headers: {
@@ -10,15 +14,40 @@ export async function getAllStudents(): Promise<Student[]> {
     }
   });
 
-  if (!res.ok) throw new Error("Failed to fetch students");
+  if (!res.ok) {
+    throw new Error("Failed to fetch students");
+  }
+
   return res.json();
 }
 
+export async function getStudentById(studentId: string): Promise<Student> {
+  const res = await fetch(`${API_BASE}/${studentId}`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch student");
+  }
+
+  return res.json();
+}
+
+/* ===========================
+   REGISTER STUDENT (ADMIN)
+=========================== */
+
 export async function registerStudent(data: {
   studentId: string;
-  name: string;
+  name: string;               
   email: string;
   department: string;
+  graduationYear: number;
+  finalGrade: string;
+  percentage: number;
+  password: string;           // temp password
 }) {
   const res = await fetch(API_BASE, {
     method: "POST",
@@ -37,45 +66,33 @@ export async function registerStudent(data: {
   return res.json();
 }
 
-export async function addStudentRecord(
+/* ===========================
+   ISSUE CERTIFICATE (ADMIN)
+   - certificate PDF
+   - student photo
+   - graduationYear
+   - percentage
+=========================== */
+
+export async function issueCertificate(
   studentId: string,
-  record: {
-    recordId: string;
-    fileHash: string;
-    issuerAdmin: string;
+  formData: FormData
+): Promise<{
+  recordHash: string;
+  txHash: string;
+}> {
+  const res = await fetch(`${API_BASE}/${studentId}/issue`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${getToken()}`
+    },
+    body: formData
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Failed to issue certificate");
   }
-) {
- const res = await fetch(
-    `http://localhost:5000/api/students/${studentId}/records`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`
-      },
-      body: JSON.stringify(record)
-    }
-  );
 
-  if (!res.ok) throw new Error("Failed to add student record");
-  return res.json();
-}
-export async function addRecordOnChain(
-  studentId: string,
-  recordId: string
-) {
-  const res = await fetch(
-    `http://localhost:5000/api/students/${studentId}/records/onchain`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`
-      },
-      body: JSON.stringify({ recordId })
-    }
-  );
-
-  if (!res.ok) throw new Error("Blockchain tx failed");
   return res.json();
 }

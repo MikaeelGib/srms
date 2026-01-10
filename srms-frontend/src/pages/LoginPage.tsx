@@ -14,7 +14,7 @@ export default function LoginPage() {
   // If already logged in → redirect
   useEffect(() => {
     if (isAuthenticated()) {
-      navigate("/students");
+      navigate("/admin");
     }
   }, [navigate]);
 
@@ -30,7 +30,7 @@ export default function LoginPage() {
     try {
       setLoading(true);
       await login(email, password);
-      navigate("/students");
+      navigate("/admin");
     } catch (err: unknown) {
       // Narrow unknown error to a shape that may come from the API (e.g. axios)
       type ApiError = { response?: { data?: { message?: string } } };

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { StudentService } from "../services/studentService";
 import { BlockchainService } from "../services/blockchainService";
+import crypto from "crypto";
 
 // GET /api/students
 export const getStudents = async (_req: Request, res: Response) => {
@@ -146,7 +147,6 @@ export const addRecordOnChain = async (req: Request, res: Response) => {
     if (!recordId) {
       return res.status(400).json({ message: "recordId is required" });
     }
-
     //  Check student exists
     const student = await StudentService.getStudentById(studentId);
     if (!student) {
@@ -221,5 +221,61 @@ export const updateRecordStatus = async (req: Request, res: Response) => {
     res.json(updatedStudent);
   } catch {
     res.status(500).json({ message: "Failed to update record status" });
+  }
+};
+export const issueCertificate = async (req: Request, res: Response) => {
+  try {
+    const studentId = req.params.studentId.trim();
+    const { graduationYear, percentage } = req.body;
+
+    const certificate = (req.files as any)?.certificate?.[0];
+    const reportCard = (req.files as any)?.reportCard?.[0];
+    const photo = (req.files as any)?.photo?.[0];
+
+    if (!certificate || !reportCard || !photo) {
+      return res.status(400).json({ message: "Missing files" });
+    }
+
+    const certHash = crypto.createHash("sha256").update(certificate.buffer).digest("hex");
+    const reportCardHash = crypto.createHash("sha256").update(reportCard.buffer).digest("hex");
+    const photoHash = crypto.createHash("sha256").update(photo.buffer).digest("hex");
+
+    const recordPayload = {
+      studentId,
+      graduationYear: Number(graduationYear),
+      percentage: Number(percentage),
+      certHash,
+      reportCardHash,
+      photoHash,
+      issuedAt: new Date().toISOString()
+    };
+
+    const recordHash = crypto
+      .createHash("sha256")
+      .update(JSON.stringify(recordPayload))
+      .digest("hex");
+
+    // blockchain write
+    const tx = await BlockchainService.addRecord(studentId, recordHash);
+
+    // mongo save
+    await StudentService.addRecordToStudent(studentId, {
+      recordId: recordHash,
+      certHash,
+      reportCardHash,
+      photoHash,
+      graduationYear: Number(graduationYear),
+      percentage: Number(percentage),
+      blockchainTxHash: tx.txHash,
+      status: "on-chain"
+    } as any);
+
+    res.status(201).json({
+      recordHash,
+      txHash: tx.txHash
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Certificate issuance failed" });
   }
 };
