@@ -65,29 +65,31 @@ A blockchain-based system for issuing, storing, and verifying academic certifica
 ---
 
 ### Backend Setup
-cd srms-backend
-npm install
-npm run dev
+- cd srms-backend
+- npm install
+- npm run dev
+
+Create .env file:
+
+- MONGO_URI=your_mongo_uri
+- JWT_SECRET=your_secret
+- PRIVATE_KEY=admin_wallet_private_key
+- SEPOLIA_RPC_URL=your_rpc_url
+- CONTRACT_ADDRESS=deployed_contract_address
 
 ---
-Create .env file:
-MONGO_URI=your_mongo_uri
-JWT_SECRET=your_secret
-PRIVATE_KEY=admin_wallet_private_key
-SEPOLIA_RPC_URL=your_rpc_url
-CONTRACT_ADDRESS=deployed_contract_address
 
 ### Smart Contracts
-cd srms-contracts
-npx hardhat compile
-npx hardhat deploy --network sepolia
+- cd srms-contracts
+- npx hardhat compile
+- npx hardhat deploy --network sepolia
 
 ---
 
 ### Frontend
-cd srms-frontend
-npm install
-npm run dev
+- cd srms-frontend
+- npm install
+- npm run dev
 
 ---
 
