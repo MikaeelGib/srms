@@ -4,48 +4,30 @@ This project allows educational institutions to issue certificates on the blockc
 --------------------------------
 🚀 Features
 👨‍💼 Admin
-
-Create and manage student records
-
-Issue certificates and report cards
-
-Upload certificate PDF, grade report PDF, and student photo
-
-Hash documents and store verification data on blockchain
-
-Generate QR codes for issued certificates
+-Create and manage student records
+-Issue certificates and report cards
+-Upload certificate PDF, grade report PDF, and student photo
+-Hash documents and store verification data on blockchain
+-Generate QR codes for issued certificates
 --------------------------------
 👨‍🎓 Student
-
-Secure login
-
-View personal academic records
-
-Access issued certificate details
-
-Share QR code or certificate hash for verification
+-Secure login
+-View personal academic records
+-Access issued certificate details
+-Share QR code or certificate hash for verification
 ---------------------------
 🔍 Verifier (Public Access)
-
 Verify certificates using:
-
-Certificate hash
-
-QR code (file upload or camera scan)
+-Certificate hash
+-QR code (file upload or camera scan)
 
 View verified details:
-
-Student name
-
-Roll number
-
-Department
-
-Graduation year
-
-Issue date
-
-Download certificate PDF, report card PDF, and view student photo
+-Student name
+-Roll number
+-Department
+-Graduation year
+-Issue date
+-Download certificate PDF, report card PDF, and view student photo
 ------------------------
 🧱 System Architecture
 
