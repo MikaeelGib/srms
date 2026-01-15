@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getAllStudents, issueCertificate } from "../api/studentApi";
 import type { Student } from "../types/Student";
+import * as styles from "../styles/certificateStyles";
 
 type IssueResult = {
   recordHash: string;
@@ -49,55 +50,56 @@ export default function IssueCertificatePage() {
       const res = await issueCertificate(selectedStudent.studentId, formData);
       setResult(res);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed");
+      alert(err instanceof Error ? err.message : "Failed to issue certificate");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: "calc(100vh - 70px)",
-        background: "linear-gradient(135deg, #04a4ef, #02396f)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20
-      }}
-    >
-      <div
-        style={{
-          width: 420,
-          background: "linear-gradient(135deg, #1fe29e, #005b7f)",
-          borderRadius: 20,
-          padding: 50,
-          color: "#fff",
-          boxShadow: "0 25px 60px rgba(0,0,0,0.25)"
-        }}
-      >
+    <div style={styles.pageWrapper}>
+      <div style={styles.card}>
         <h2 style={{ textAlign: "center", marginBottom: 20 }}>
-          Issue New Certificate
+          Issue Certificate
         </h2>
 
         {/* STUDENT AUTOCOMPLETE */}
         <div style={{ position: "relative", marginBottom: 20 }}>
           <input
+            style={styles.input}
             placeholder="Student name or roll number"
             value={query}
             onChange={e => {
               setQuery(e.target.value);
               setSelectedStudent(null);
             }}
-            style={inputStyle}
           />
 
           {filteredStudents.length > 0 && !selectedStudent && (
-            <div style={dropdownStyle}>
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                background: "#fff",
+                color: "#000",
+                borderRadius: 10,
+                marginTop: 6,
+                maxHeight: 180,
+                overflowY: "auto",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+                zIndex: 10
+              }}
+            >
               {filteredStudents.map(s => (
                 <div
                   key={s.studentId}
-                  style={optionStyle}
+                  style={{
+                    padding: 10,
+                    cursor: "pointer",
+                    borderBottom: "1px solid #eee"
+                  }}
                   onClick={() => {
                     setSelectedStudent(s);
                     setQuery(`${s.name} (${s.studentId})`);
@@ -114,28 +116,20 @@ export default function IssueCertificatePage() {
         </div>
 
         {/* FILE INPUTS */}
-        <label style={labelStyle}>Certificate PDF</label>
+        <label style={styles.label}>Certificate PDF</label>
         <input type="file" accept=".pdf" onChange={e => setCertificate(e.target.files?.[0] || null)} />
 
-        <label style={labelStyle}>Report Card PDF</label>
+        <label style={styles.label}>Report Card PDF</label>
         <input type="file" accept=".pdf" onChange={e => setReportCard(e.target.files?.[0] || null)} />
 
-        <label style={labelStyle}>Student Photo</label>
+        <label style={styles.label}>Student Photo</label>
         <input type="file" accept="image/*" onChange={e => setPhoto(e.target.files?.[0] || null)} />
 
         <button
           onClick={issue}
           disabled={loading}
           style={{
-            marginTop: 25,
-            width: "100%",
-            padding: 14,
-            borderRadius: 12,
-            border: "none",
-            background: "linear-gradient(135deg, #f97316, #ef4444)",
-            color: "#fff",
-            fontWeight: 600,
-            cursor: "pointer",
+            ...styles.buttonPrimary,
             opacity: loading ? 0.7 : 1
           }}
         >
@@ -144,12 +138,12 @@ export default function IssueCertificatePage() {
 
         {/* SUCCESS */}
         {result && (
-          <div style={{ marginTop: 30, background: "#00000055", padding: 16, borderRadius: 12 }}>
+          <div style={styles.resultBox}>
             <p><b>Record Hash</b></p>
-            <code style={codeStyle}>{result.recordHash}</code>
+            <code style={styles.code}>{result.recordHash}</code>
 
-            <p><b>Transaction</b></p>
-            <code style={codeStyle}>{result.txHash}</code>
+            <p><b>Transaction Hash</b></p>
+            <code style={styles.code}>{result.txHash}</code>
 
             <img
               style={{ marginTop: 15 }}
@@ -161,48 +155,3 @@ export default function IssueCertificatePage() {
     </div>
   );
 }
-
-/* ---------- styles ---------- */
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: 12,
-  borderRadius: 10,
-  border: "none",
-  outline: "none",
-  fontSize: 14
-};
-
-const dropdownStyle: React.CSSProperties = {
-  position: "absolute",
-  top: "100%",
-  left: 0,
-  right: 0,
-  background: "#fff",
-  color: "#000",
-  borderRadius: 10,
-  marginTop: 6,
-  maxHeight: 180,
-  overflowY: "auto",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-  zIndex: 10
-};
-
-const optionStyle: React.CSSProperties = {
-  padding: 10,
-  cursor: "pointer",
-  borderBottom: "1px solid #eee"
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: 13,
-  marginTop: 15,
-  marginBottom: 6
-};
-
-const codeStyle: React.CSSProperties = {
-  display: "block",
-  wordBreak: "break-all",
-  fontSize: 12
-};

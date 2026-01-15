@@ -6,19 +6,24 @@ import {
   createStudent,
   updateStudent,
   deleteStudent,
-  issueCertificate
+  issueCertificate,
+  verifyCertificate
 } from "../controllers/studentController";
 import { requireAuth, requireAdmin } from "../middlewares/authMiddleware";
 
 const router = Router();
 const upload = multer();
 
-router.get("/:studentId", requireAuth, getStudentById);
+// Admin routes
 router.get("/", requireAuth, requireAdmin, getStudents);
 router.post("/", requireAuth, requireAdmin, createStudent);
 router.put("/:studentId", requireAuth, requireAdmin, updateStudent);
 router.delete("/:studentId", requireAuth, requireAdmin, deleteStudent);
 
+// Student
+router.get("/:studentId", requireAuth, getStudentById);
+
+// Issue certificate
 router.post(
   "/:studentId/issue",
   requireAuth,
@@ -30,5 +35,8 @@ router.post(
   ]),
   issueCertificate
 );
+
+// 🔓 Public verifier route (NO AUTH)
+router.post("/verify", verifyCertificate);
 
 export default router;

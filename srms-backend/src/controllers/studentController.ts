@@ -3,7 +3,10 @@ import { StudentService } from "../services/studentService";
 import { BlockchainService } from "../services/blockchainService";
 import crypto from "crypto";
 
-// GET /api/students
+/* =======================
+   STUDENT CRUD
+======================= */
+
 export const getStudents = async (_req: Request, res: Response) => {
   try {
     const students = await StudentService.getAll();
@@ -13,47 +16,32 @@ export const getStudents = async (_req: Request, res: Response) => {
   }
 };
 
-// GET /api/students/:studentId
 export const getStudentById = async (req: Request, res: Response) => {
   try {
-    const studentId = req.params.studentId.trim();
-    const student = await StudentService.getStudentById(studentId);
-
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
+    const student = await StudentService.getStudentById(req.params.studentId.trim());
+    if (!student) return res.status(404).json({ message: "Student not found" });
     res.json(student);
   } catch {
     res.status(500).json({ message: "Failed to fetch student" });
   }
 };
 
-// POST /api/students
 export const createStudent = async (req: Request, res: Response) => {
   try {
     const { studentId, name, email, department } = req.body;
-
     if (!studentId || !name) {
-      return res
-        .status(400)
-        .json({ message: "studentId and name are required" });
+      return res.status(400).json({ message: "studentId and name are required" });
     }
 
-    const trimmedStudentId = studentId.trim();
-
-    const exists = await StudentService.getStudentById(trimmedStudentId);
-    if (exists) {
-      return res.status(409).json({ message: "Student already exists" });
-    }
+    const exists = await StudentService.getStudentById(studentId.trim());
+    if (exists) return res.status(409).json({ message: "Student already exists" });
 
     const student = await StudentService.create({
-      studentId: trimmedStudentId,
+      studentId: studentId.trim(),
       name,
       email,
-      department,
-      records: [],
-    } as any);
+      department
+    });
 
     res.status(201).json(student);
   } catch {
@@ -61,221 +49,119 @@ export const createStudent = async (req: Request, res: Response) => {
   }
 };
 
-// PUT /api/students/:studentId
 export const updateStudent = async (req: Request, res: Response) => {
   try {
-    const studentId = req.params.studentId.trim();
-
     const updated = await StudentService.updateStudentById(
-      studentId,
+      req.params.studentId.trim(),
       req.body
     );
 
-    if (!updated) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
+    if (!updated) return res.status(404).json({ message: "Student not found" });
     res.json(updated);
   } catch {
     res.status(500).json({ message: "Failed to update student" });
   }
 };
 
-// DELETE /api/students/:studentId
 export const deleteStudent = async (req: Request, res: Response) => {
   try {
-    const studentId = req.params.studentId.trim();
-    const removed = await StudentService.deleteStudentById(studentId);
-
-    if (!removed) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
+    const removed = await StudentService.deleteStudentById(req.params.studentId.trim());
+    if (!removed) return res.status(404).json({ message: "Student not found" });
     res.json({ message: "Student deleted" });
   } catch {
     res.status(500).json({ message: "Failed to delete student" });
   }
 };
 
-// POST /api/students/:studentId/records
-export const addStudentRecord = async (req: Request, res: Response) => {
-  try {
-    const studentId = req.params.studentId.trim();
-    const { recordId, fileHash, ipfsCid, blockchainTxHash, issuerAdmin, status } =
-      req.body;
+/* =======================
+   ISSUE CERTIFICATE
+======================= */
 
-    if (!recordId) {
-      return res.status(400).json({ message: "recordId is required" });
-    }
-
-    const student = await StudentService.getStudentById(studentId);
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    const duplicate = student.records.some(
-      (r) => r.recordId === recordId
-    );
-
-    if (duplicate) {
-      return res.status(409).json({
-        message: "Record with this recordId already exists for this student",
-      });
-    }
-
-    const updatedStudent = await StudentService.addRecordToStudent(studentId, {
-      recordId,
-      fileHash,
-      ipfsCid,
-      blockchainTxHash,
-      issuerAdmin,
-      status,
-    });
-
-    res.status(201).json(updatedStudent);
-  } catch {
-    res.status(500).json({ message: "Failed to add record" });
-  }
-};
-
-// POST /api/students/:studentId/records/onchain
-export const addRecordOnChain = async (req: Request, res: Response) => {
-  try {
-    const studentId = req.params.studentId.trim();
-    const { recordId } = req.body;
-
-    if (!recordId) {
-      return res.status(400).json({ message: "recordId is required" });
-    }
-    //  Check student exists
-    const student = await StudentService.getStudentById(studentId);
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-    // Check if record is verified
-    const record = student.records.find((r) => r.recordId === recordId);
-    if (!record || record.status !== "verified") {
-      return res.status(400).json({
-        message: "Record must be verified before adding to blockchain",
-      });
-    }
-
-    //  Prevent duplicate record
-    const duplicate = student.records.some(
-      (r) => r.recordId === recordId
-    );
-
-    if (duplicate) {
-      return res.status(409).json({
-        message: "Record already exists for this student",
-      });
-    }
-
-    // 3️⃣ Write to blockchain
-    const result = await BlockchainService.addRecord(studentId, recordId);
-
-    // 4️⃣ Save record in MongoDB
-    const updatedStudent = await StudentService.addRecordToStudent(studentId, {
-      recordId,
-      blockchainTxHash: result.txHash,
-      status: "on-chain",
-    });
-
-    res.status(201).json({
-      message: "Record added on blockchain",
-      txHash: result.txHash,
-      student: updatedStudent,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Blockchain transaction failed" });
-  }
-};
-
-
-// PATCH /api/students/:studentId/records/:recordId/status
-export const updateRecordStatus = async (req: Request, res: Response) => {
-  try {
-    const studentId = req.params.studentId.trim();
-    const recordId = req.params.recordId.trim();
-    const { status } = req.body;
-
-    const allowedStatuses = ["pending", "verified", "on-chain"];
-
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
-    }
-
-    const updatedStudent = await StudentService.updateRecordStatus(
-      studentId,
-      recordId,
-      status
-    );
-
-    if (!updatedStudent) {
-      return res.status(404).json({
-        message: "Student or record not found",
-      });
-    }
-
-    res.json(updatedStudent);
-  } catch {
-    res.status(500).json({ message: "Failed to update record status" });
-  }
-};
 export const issueCertificate = async (req: Request, res: Response) => {
   try {
     const studentId = req.params.studentId.trim();
-    const { graduationYear, percentage } = req.body;
+    const student = await StudentService.getStudentById(studentId);
+    if (!student) return res.status(404).json({ message: "Student not found" });
 
     const certificate = (req.files as any)?.certificate?.[0];
     const reportCard = (req.files as any)?.reportCard?.[0];
     const photo = (req.files as any)?.photo?.[0];
 
     if (!certificate || !reportCard || !photo) {
-      return res.status(400).json({ message: "Missing files" });
+      return res.status(400).json({ message: "All files are required" });
     }
 
+    // Individual file hashes
     const certHash = crypto.createHash("sha256").update(certificate.buffer).digest("hex");
-    const reportCardHash = crypto.createHash("sha256").update(reportCard.buffer).digest("hex");
+    const reportHash = crypto.createHash("sha256").update(reportCard.buffer).digest("hex");
     const photoHash = crypto.createHash("sha256").update(photo.buffer).digest("hex");
 
-    const recordPayload = {
-      studentId,
-      graduationYear: Number(graduationYear),
-      percentage: Number(percentage),
-      certHash,
-      reportCardHash,
-      photoHash,
-      issuedAt: new Date().toISOString()
-    };
-
+    // Unified record hash (QR hash)
     const recordHash = crypto
       .createHash("sha256")
-      .update(JSON.stringify(recordPayload))
+      .update(`${studentId}|${certHash}|${reportHash}|${photoHash}`)
       .digest("hex");
 
-    // blockchain write
+    // Prevent duplicate issuance
+    if (student.records.some(r => r.recordId === recordHash)) {
+      return res.status(409).json({ message: "Certificate already issued" });
+    }
+
+    // Blockchain write
     const tx = await BlockchainService.addRecord(studentId, recordHash);
 
-    // mongo save
+    // MongoDB save
     await StudentService.addRecordToStudent(studentId, {
       recordId: recordHash,
-      certHash,
-      reportCardHash,
-      photoHash,
-      graduationYear: Number(graduationYear),
-      percentage: Number(percentage),
+      fileHash: certHash,
       blockchainTxHash: tx.txHash,
-      status: "on-chain"
-    } as any);
+      status: "on-chain",
+      issuerAdmin: req.user?.id
+    });
 
     res.status(201).json({
+      message: "Certificate issued successfully",
       recordHash,
       txHash: tx.txHash
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Certificate issuance failed" });
+  }
+};
+
+/* =======================
+   VERIFIER ENDPOINT
+======================= */
+
+export const verifyCertificate = async (req: Request, res: Response) => {
+  try {
+    const { recordHash } = req.body;
+    if (!recordHash) {
+      return res.status(400).json({ message: "recordHash is required" });
+    }
+
+    const student = await StudentService.findByRecordHash(recordHash);
+    if (!student) {
+      return res.status(404).json({ message: "Certificate not found" });
+    }
+
+    const record = student.records.find(r => r.recordId === recordHash);
+    if (!record || !record.blockchainTxHash) {
+      return res.status(400).json({ message: "Certificate not on blockchain" });
+    }
+
+    res.json({
+      verified: true,
+      student: {
+        name: student.name,
+        studentId: student.studentId,
+        department: student.department
+      },
+      issuedAt: record.issueDate,
+      blockchainTxHash: record.blockchainTxHash
+    });
+  } catch {
+    res.status(500).json({ message: "Verification failed" });
   }
 };

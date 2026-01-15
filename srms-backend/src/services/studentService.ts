@@ -88,4 +88,11 @@ export const StudentService = {
       { new: true }
     ).lean();
   },
+  
+  findByRecordHash: async (recordId: string) => {
+    return await StudentModel.findOne({
+      "records.recordId": recordId
+    }).lean();
+  },
+
 };
