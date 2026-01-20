@@ -1,10 +1,12 @@
 import { useState } from "react";
 import * as styles from "../styles/certificateStyles";
+import type { VerifyResponse } from "../types/Verification";
+
 
 export default function VerifyCertificatePage() {
   const [hash, setHash] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<VerifyResponse | null>(null);
   const [error, setError] = useState("");
 
   const verify = async () => {
@@ -24,8 +26,8 @@ export default function VerifyCertificatePage() {
       if (!res.ok) throw new Error(data.message);
 
       setResult(data);
-    } catch (err: any) {
-      setError(err.message || "Verification failed");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Verification failed");
     } finally {
       setLoading(false);
     }

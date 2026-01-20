@@ -1,12 +1,7 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-
-interface AuthRequest extends Request {
-  user?: {
-    id?: string;
-    role?: string;
-  };
-}
+import { AuthRequest } from "../@types/auth";
+import { emitWarning } from "node:process";
 
 export const requireAuth = (
   req: AuthRequest,
@@ -24,9 +19,15 @@ export const requireAuth = (
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
       id: string;
       role: string;
+      email?: string;
     };
 
-    req.user = decoded;
+    req.user = {
+      id: decoded.id,
+      role: decoded.role,
+      email: decoded.email
+    };
+
     next();
   } catch {
     return res.status(401).json({ message: "Invalid token" });

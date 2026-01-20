@@ -3,13 +3,14 @@ import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import StudentsPage from "./pages/StudentsPage";
-import AddStudentPage from "./pages/AddStudentPage";
 import StudentDetailsPage from "./pages/StudentDetailsPage";
 
 import AdminDashboard from "./pages/AdminDashboard";
 import RegisterStudentPage from "./pages/RegisterStudentPage";
 import IssueCertificatePage from "./pages/IssueCertificatePage";
 import RecordsPage from "./pages/RecordsPage";
+
+import VerifyCertificatePage from "./pages/VerifyCertificatePage";
 
 import Navbar from "./components/Navbar";
 import AdminRoute from "./components/AdminRoute";
@@ -23,6 +24,7 @@ export default function App() {
         {/* ================= PUBLIC ROUTES ================= */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/verify" element={<VerifyCertificatePage />} />
 
         {/* ================= ADMIN DASHBOARD ================= */}
         <Route
@@ -67,15 +69,6 @@ export default function App() {
           element={
             <AdminRoute>
               <StudentsPage />
-            </AdminRoute>
-          }
-        />
-
-        <Route
-          path="/students/new"
-          element={
-            <AdminRoute>
-              <AddStudentPage />
             </AdminRoute>
           }
         />

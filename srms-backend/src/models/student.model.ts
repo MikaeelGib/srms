@@ -7,6 +7,8 @@ export interface IRecord {
   blockchainTxHash?: string;
   issueDate?: Date;
   issuerAdmin?: string;
+  graduationYear?: number;
+  percentage?: number;
   status?: "pending" | "verified" | "on-chain";
 }
 
@@ -28,13 +30,15 @@ const RecordSchema = new Schema<IRecord>(
     fileHash: { type: String },
     ipfsCid: { type: String },
     blockchainTxHash: { type: String },
-    issueDate: { type: Date },
+    issueDate: { type: Date, default: Date.now },
     issuerAdmin: { type: String },
+    graduationYear: { type: Number },
+    percentage: { type: Number },
     status: {
       type: String,
       enum: ["pending", "verified", "on-chain"],
       default: "pending"
-    },
+    }
   },
   { _id: false }
 );
@@ -47,9 +51,10 @@ const StudentSchema = new Schema<IStudent>(
     password: { type: String },
     department: { type: String },
     role: {
-       type: String,
-       enum: ["student", "admin"], 
-       default: "student" },
+      type: String,
+      enum: ["student", "admin"],
+      default: "student"
+    },
     records: { type: [RecordSchema], default: [] }
   },
   { timestamps: true }
