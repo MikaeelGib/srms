@@ -2,18 +2,18 @@ import { Routes, Route } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
-import StudentsPage from "./pages/StudentsPage";
-import StudentDetailsPage from "./pages/StudentDetailsPage";
+import VerifyCertificatePage from "./pages/VerifyCertificatePage";
 
 import AdminDashboard from "./pages/AdminDashboard";
 import RegisterStudentPage from "./pages/RegisterStudentPage";
 import IssueCertificatePage from "./pages/IssueCertificatePage";
 import RecordsPage from "./pages/RecordsPage";
 
-import VerifyCertificatePage from "./pages/VerifyCertificatePage";
+import StudentDashboardPage from "./pages/StudentDashboardPage";
 
 import Navbar from "./components/Navbar";
 import AdminRoute from "./components/AdminRoute";
+import StudentRoute from "./components/StudentRoute";
 
 export default function App() {
   return (
@@ -21,12 +21,22 @@ export default function App() {
       <Navbar />
 
       <Routes>
-        {/* ================= PUBLIC ROUTES ================= */}
+        {/* ================= PUBLIC ================= */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/verify" element={<VerifyCertificatePage />} />
 
-        {/* ================= ADMIN DASHBOARD ================= */}
+        {/* ================= STUDENT ================= */}
+        <Route
+          path="/student/dashboard"
+          element={
+            <StudentRoute>
+              <StudentDashboardPage />
+            </StudentRoute>
+          }
+        />
+
+        {/* ================= ADMIN ================= */}
         <Route
           path="/admin"
           element={
@@ -59,25 +69,6 @@ export default function App() {
           element={
             <AdminRoute>
               <RecordsPage />
-            </AdminRoute>
-          }
-        />
-
-        {/* ================= LEGACY STUDENT ROUTES (ADMIN) ================= */}
-        <Route
-          path="/students"
-          element={
-            <AdminRoute>
-              <StudentsPage />
-            </AdminRoute>
-          }
-        />
-
-        <Route
-          path="/students/:studentId"
-          element={
-            <AdminRoute>
-              <StudentDetailsPage />
             </AdminRoute>
           }
         />

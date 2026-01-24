@@ -1,63 +1,52 @@
-import { Schema, model, Document } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IRecord {
   recordId: string;
   fileHash?: string;
-  ipfsCid?: string;
   blockchainTxHash?: string;
-  issueDate?: Date;
   issuerAdmin?: string;
-  graduationYear?: number;
-  percentage?: number;
   status?: "pending" | "verified" | "on-chain";
+  graduationYear: number;
+  percentage: number;
+  issueDate: Date;
 }
 
 export interface IStudent extends Document {
   studentId: string;
   name: string;
   email?: string;
-  password?: string;
   department?: string;
+  password?: string;
   role: "student" | "admin";
   records: IRecord[];
-  createdAt: Date;
-  updatedAt: Date;
 }
 
-const RecordSchema = new Schema<IRecord>(
-  {
-    recordId: { type: String, required: true },
-    fileHash: { type: String },
-    ipfsCid: { type: String },
-    blockchainTxHash: { type: String },
-    issueDate: { type: Date, default: Date.now },
-    issuerAdmin: { type: String },
-    graduationYear: { type: Number },
-    percentage: { type: Number },
-    status: {
-      type: String,
-      enum: ["pending", "verified", "on-chain"],
-      default: "pending"
-    }
+const RecordSchema = new Schema<IRecord>({
+  recordId: { type: String, required: true },
+  fileHash: String,
+  blockchainTxHash: String,
+  issuerAdmin: String,
+  status: {
+    type: String,
+    enum: ["pending", "verified", "on-chain"],
+    default: "pending"
   },
-  { _id: false }
-);
+  graduationYear: { type: Number, required: true },
+  percentage: { type: Number, required: true },
+  issueDate: { type: Date, default: Date.now }
+});
 
-const StudentSchema = new Schema<IStudent>(
-  {
-    studentId: { type: String, required: true, unique: true },
-    name: { type: String, required: true },
-    email: { type: String },
-    password: { type: String },
-    department: { type: String },
-    role: {
-      type: String,
-      enum: ["student", "admin"],
-      default: "student"
-    },
-    records: { type: [RecordSchema], default: [] }
-  },
-  { timestamps: true }
-);
+const StudentSchema = new Schema<IStudent>({
+  studentId: { type: String, unique: true, required: true },
+  name: { type: String, required: true },
+  email: String,
+  department: String,
+  password: String,
+  role: { type: String, default: "student" },
+  records: [RecordSchema]
+});
 
-export const StudentModel = model<IStudent>("Student", StudentSchema);
+export const StudentModel = mongoose.model<IStudent>(
+  "Student",
+  StudentSchema
+);

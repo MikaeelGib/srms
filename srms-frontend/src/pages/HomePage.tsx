@@ -15,16 +15,16 @@ export default function HomePage() {
           <button>Enter Admin</button>
         </div>
 
-        <div style={styles.card}>
+        <div style={styles.card} onClick={() => navigate("/verify")}>
           <h3>Verifier</h3>
           <p>Verify certificate authenticity</p>
-          <button disabled>Enter Verifier</button>
+          <button>Enter Verifier</button>
         </div>
 
-        <div style={styles.card}>
+        <div style={styles.card} onClick={() => navigate("/login")}>
           <h3>Student Portal</h3>
           <p>View and download certificates</p>
-          <button disabled>Enter Student</button>
+          <button>Enter Student</button>
         </div>
       </div>
     </div>

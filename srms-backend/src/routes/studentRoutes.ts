@@ -4,7 +4,6 @@ import {
   getStudents,
   getStudentById,
   createStudent,
-  updateStudent,
   deleteStudent,
   issueCertificate,
   verifyCertificate
@@ -14,16 +13,24 @@ import { requireAuth, requireAdmin } from "../middlewares/authMiddleware";
 const router = Router();
 const upload = multer();
 
-// Admin routes
+/* =======================
+   ADMIN
+======================= */
+
 router.get("/", requireAuth, requireAdmin, getStudents);
 router.post("/", requireAuth, requireAdmin, createStudent);
-router.put("/:studentId", requireAuth, requireAdmin, updateStudent);
 router.delete("/:studentId", requireAuth, requireAdmin, deleteStudent);
 
-// Student
+/* =======================
+   STUDENT (DASHBOARD)
+======================= */
+
 router.get("/:studentId", requireAuth, getStudentById);
 
-// Issue certificate
+/* =======================
+   CERTIFICATE
+======================= */
+
 router.post(
   "/:studentId/issue",
   requireAuth,
@@ -36,7 +43,10 @@ router.post(
   issueCertificate
 );
 
-// 🔓 Public verifier route (NO AUTH)
+/* =======================
+   PUBLIC VERIFY
+======================= */
+
 router.post("/verify", verifyCertificate);
 
 export default router;

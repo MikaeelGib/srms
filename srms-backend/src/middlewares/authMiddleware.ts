@@ -1,27 +1,31 @@
 import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AuthRequest } from "../@types/auth";
-import { emitWarning } from "node:process";
 
 export const requireAuth = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
-  const header = req.headers.authorization;
+  const authHeader = req.headers.authorization;
 
-  if (!header || !header.startsWith("Bearer ")) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ message: "No token provided" });
   }
 
   try {
-    const token = header.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET!
+    ) as {
       id: string;
-      role: string;
+      role: "admin" | "student";
       email?: string;
     };
 
+    // attach user to request
     req.user = {
       id: decoded.id,
       role: decoded.role,
@@ -29,7 +33,7 @@ export const requireAuth = (
     };
 
     next();
-  } catch {
+  } catch (err) {
     return res.status(401).json({ message: "Invalid token" });
   }
 };

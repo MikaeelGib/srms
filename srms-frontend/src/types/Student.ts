@@ -3,8 +3,8 @@ export interface Record {
   certHash: string;                 // hash of certificate PDF
   reportCardHash: string;           // hash of report card PDF
   photoHash: string;                // hash of student photo
-  graduationYear: number;
-  percentage: number;
+  graduationYear?: number;
+  percentage?: number;
   blockchainTxHash?: string;        // tx hash after chain write
   status: "pending" | "verified" | "on-chain";
   issuedAt?: Date;
@@ -17,7 +17,6 @@ export interface Student {
   email: string;
   department: string;
   graduationYear: number;
-  finalGrade: string;
   percentage: number;
   records: Record[];
 }

@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { connectDB } from "./database/db";
 import studentRoutes from "./routes/studentRoutes";
 import authRoutes from "./routes/authRoutes";
+import fileRoutes from "./routes/fileRoutes";
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ connectDB();
 
 app.use("/api/students", studentRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/files", fileRoutes);
 
 app.get("/", (req, res) => res.json({ message: "SRMS Backend is running" }));
 

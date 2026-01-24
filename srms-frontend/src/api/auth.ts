@@ -2,14 +2,17 @@ import axios from "axios";
 
 const API_URL = "http://localhost:5000/api/auth";
 
-export const login = async (email: string, password: string) => {
+export const login = async (
+  identifier: string,
+  password: string,
+  role: "admin" | "student"
+) => {
   const res = await axios.post(`${API_URL}/login`, {
-    email,
+    identifier,
     password,
+    role
   });
 
-  // backend returns token
   localStorage.setItem("token", res.data.token);
-
   return res.data;
 };

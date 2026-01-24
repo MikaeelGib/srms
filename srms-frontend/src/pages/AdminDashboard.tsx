@@ -108,15 +108,15 @@ export default function AdminDashboard() {
             <div>
               <FiBarChart style={iconStyle} />
               <h2 style={{ margin: "10px 0 8px" }}>
-                View Records
+                View Students
               </h2>
               <p style={{ color: "#666" }}>
-                Browse all issued student certificates
+                Browse all registered students and their certificates
               </p>
             </div>
 
             <span style={{ color: "#2563eb", fontWeight: 500 }}>
-              View records →
+              View students →
             </span>
           </div>
         </div>

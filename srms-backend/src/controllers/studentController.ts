@@ -1,12 +1,16 @@
 import { Response } from "express";
 import crypto from "crypto";
+import bcrypt from "bcryptjs";
+import fs from "fs";
+import path from "path";
+import QRCode from "qrcode";
 
 import { StudentService } from "../services/studentService";
 import { BlockchainService } from "../services/blockchainService";
 import { AuthRequest } from "../@types/auth";
 
 /* =======================
-   STUDENT CRUD
+   GET ALL STUDENTS (ADMIN)
 ======================= */
 
 export const getStudents = async (_req: AuthRequest, res: Response) => {
@@ -18,13 +22,25 @@ export const getStudents = async (_req: AuthRequest, res: Response) => {
   }
 };
 
+/* =======================
+   STUDENT DASHBOARD
+======================= */
+
 export const getStudentById = async (req: AuthRequest, res: Response) => {
   try {
-    const studentId = req.params.studentId.trim();
-    const student = await StudentService.getStudentById(studentId);
+    const student = await StudentService.getStudentByMongoId(
+      req.params.studentId.trim()
+    );
 
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
+    }
+
+    if (
+      req.user?.role === "student" &&
+      req.user.id !== student._id.toString()
+    ) {
+      return res.status(403).json({ message: "Access denied" });
     }
 
     res.json(student);
@@ -33,28 +49,31 @@ export const getStudentById = async (req: AuthRequest, res: Response) => {
   }
 };
 
+/* =======================
+   CREATE STUDENT (ADMIN)
+======================= */
+
 export const createStudent = async (req: AuthRequest, res: Response) => {
   try {
-    const { studentId, name, email, department } = req.body;
+    const { studentId, name, email, department, password } = req.body;
 
-    if (!studentId || !name) {
-      return res.status(400).json({
-        message: "studentId and name are required"
-      });
+    if (!studentId || !name || !department || !password) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const trimmedStudentId = studentId.trim();
-    const exists = await StudentService.getStudentById(trimmedStudentId);
-
+    const exists = await StudentService.getStudentByStudentId(studentId.trim());
     if (exists) {
       return res.status(409).json({ message: "Student already exists" });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const student = await StudentService.create({
-      studentId: trimmedStudentId,
-      name,
-      email,
-      department
+      studentId: studentId.trim(),
+      name: name.trim(),
+      email: email?.trim(),
+      department: department.trim(),
+      password: hashedPassword
     });
 
     res.status(201).json(student);
@@ -63,38 +82,29 @@ export const createStudent = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const updateStudent = async (req: AuthRequest, res: Response) => {
-  try {
-    const studentId = req.params.studentId.trim();
-
-    const updated = await StudentService.updateStudentById(
-      studentId,
-      req.body
-    );
-
-    if (!updated) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    res.json(updated);
-  } catch {
-    res.status(500).json({ message: "Failed to update student" });
-  }
-};
+/* =======================
+   DELETE STUDENT (ADMIN)
+======================= */
 
 export const deleteStudent = async (req: AuthRequest, res: Response) => {
-  try {
-    const studentId = req.params.studentId.trim();
-    const removed = await StudentService.deleteStudentById(studentId);
-
-    if (!removed) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    res.json({ message: "Student deleted" });
-  } catch {
-    res.status(500).json({ message: "Failed to delete student" });
+  const adminPin = req.headers["x-admin-pin"];
+  if (adminPin !== process.env.ADMIN_DELETE_PIN) {
+    return res.status(403).json({ message: "Invalid admin PIN" });
   }
+
+  const studentId = req.params.studentId.trim();
+  const student = await StudentService.getStudentByStudentId(studentId);
+
+  if (!student) return res.status(404).json({ message: "Student not found" });
+
+  if (student.records.some(r => r.status === "on-chain")) {
+    return res
+      .status(403)
+      .json({ message: "Cannot delete student with on-chain records" });
+  }
+
+  await StudentService.deleteStudentByStudentId(studentId);
+  res.json({ message: "Student deleted successfully" });
 };
 
 /* =======================
@@ -102,143 +112,65 @@ export const deleteStudent = async (req: AuthRequest, res: Response) => {
 ======================= */
 
 export const issueCertificate = async (req: AuthRequest, res: Response) => {
-  try {
-    const studentId = req.params.studentId.trim();
+  const studentId = req.params.studentId.trim();
+  const graduationYear = Number(req.body.graduationYear);
+  const percentage = Number(req.body.percentage);
 
-    /* ---------- SANITIZE INPUT ---------- */
-    const graduationYearRaw = req.body.graduationYear;
-    const percentageRaw = req.body.percentage;
+  const student = await StudentService.getStudentByStudentId(studentId);
+  if (!student) return res.status(404).json({ message: "Student not found" });
 
-    const graduationYear =
-      graduationYearRaw !== undefined && graduationYearRaw !== ""
-        ? Number(graduationYearRaw)
-        : undefined;
-
-    const percentage =
-      percentageRaw !== undefined && percentageRaw !== ""
-        ? Number(percentageRaw)
-        : undefined;
-
-    if (
-      graduationYear !== undefined &&
-      Number.isNaN(graduationYear)
-    ) {
-      return res.status(400).json({ message: "Invalid graduationYear" });
-    }
-
-    if (
-      percentage !== undefined &&
-      Number.isNaN(percentage)
-    ) {
-      return res.status(400).json({ message: "Invalid percentage" });
-    }
-
-    const student = await StudentService.getStudentById(studentId);
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    const certificate = (req.files as any)?.certificate?.[0];
-    const reportCard = (req.files as any)?.reportCard?.[0];
-    const photo = (req.files as any)?.photo?.[0];
-
-    if (!certificate || !reportCard || !photo) {
-      return res.status(400).json({ message: "All files are required" });
-    }
-
-    /* ---------- FILE HASHES ---------- */
-
-    const certHash = crypto
-      .createHash("sha256")
-      .update(certificate.buffer)
-      .digest("hex");
-
-    const reportHash = crypto
-      .createHash("sha256")
-      .update(reportCard.buffer)
-      .digest("hex");
-
-    const photoHash = crypto
-      .createHash("sha256")
-      .update(photo.buffer)
-      .digest("hex");
-
-    /* ---------- UNIFIED RECORD HASH ---------- */
-
-    const recordHash = crypto
-      .createHash("sha256")
-      .update(`${studentId}|${certHash}|${reportHash}|${photoHash}`)
-      .digest("hex");
-
-    if (student.records.some(r => r.recordId === recordHash)) {
-      return res.status(409).json({ message: "Certificate already issued" });
-    }
-
-    /* ---------- BLOCKCHAIN ---------- */
-
-    const tx = await BlockchainService.addRecord(studentId, recordHash);
-
-    /* ---------- DATABASE ---------- */
-
-    await StudentService.addRecordToStudent(studentId, {
-      recordId: recordHash,
-      fileHash: certHash,
-      blockchainTxHash: tx.txHash,
-      issuerAdmin: req.user?.id,
-      status: "on-chain",
-      ...(graduationYear !== undefined && { graduationYear }),
-      ...(percentage !== undefined && { percentage })
-    });
-
-    res.status(201).json({
-      message: "Certificate issued successfully",
-      recordHash,
-      txHash: tx.txHash
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Certificate issuance failed" });
+  const files = req.files as any;
+  if (!files?.certificate || !files?.reportCard || !files?.photo) {
+    return res.status(400).json({ message: "All files are required" });
   }
+
+  const recordHash = crypto
+    .createHash("sha256")
+    .update(
+      studentId +
+        files.certificate[0].buffer.toString("hex") +
+        files.reportCard[0].buffer.toString("hex")
+    )
+    .digest("hex");
+
+  const baseDir = path.join(
+    process.cwd(),
+    "uploads",
+    studentId,
+    recordHash
+  );
+  fs.mkdirSync(baseDir, { recursive: true });
+
+  fs.writeFileSync(path.join(baseDir, "certificate.pdf"), files.certificate[0].buffer);
+  fs.writeFileSync(path.join(baseDir, "reportCard.pdf"), files.reportCard[0].buffer);
+  fs.writeFileSync(path.join(baseDir, "photo.jpg"), files.photo[0].buffer);
+  fs.writeFileSync(path.join(baseDir, "qr.png"), await QRCode.toBuffer(recordHash));
+
+  const tx = await BlockchainService.addRecord(studentId, recordHash);
+
+  await StudentService.addRecordToStudent(studentId, {
+    recordId: recordHash,
+    blockchainTxHash: tx.txHash,
+    issuerAdmin: req.user?.id,
+    status: "on-chain",
+    graduationYear,
+    percentage
+  });
+
+  res.status(201).json({ recordHash, txHash: tx.txHash });
 };
 
 /* =======================
-   PUBLIC VERIFIER
+   PUBLIC VERIFIER (KEPT ✅)
 ======================= */
 
 export const verifyCertificate = async (req: AuthRequest, res: Response) => {
-  try {
-    const { recordHash } = req.body;
+  const { recordHash } = req.body;
+  if (!recordHash) return res.status(400).json({ message: "recordHash required" });
 
-    if (!recordHash) {
-      return res.status(400).json({ message: "recordHash is required" });
-    }
+  const student = await StudentService.findByRecordHash(recordHash);
+  if (!student) return res.status(404).json({ message: "Not found" });
 
-    const student = await StudentService.findByRecordHash(recordHash);
-    if (!student) {
-      return res.status(404).json({ message: "Certificate not found" });
-    }
-
-    const record = student.records.find(r => r.recordId === recordHash);
-    if (!record || !record.blockchainTxHash) {
-      return res.status(400).json({ message: "Certificate not on blockchain" });
-    }
-
-    res.json({
-      valid: true,
-      student: {
-        name: student.name,
-        studentId: student.studentId,
-        department: student.department
-      },
-      record: {
-        recordId: record.recordId,
-        issuedAt: record.issueDate,
-        graduationYear: record.graduationYear,
-        percentage: record.percentage,
-        blockchainTxHash: record.blockchainTxHash
-      }
-    });
-  } catch {
-    res.status(500).json({ message: "Verification failed" });
-  }
+  const record = student.records.find(r => r.recordId === recordHash);
+  res.json({ valid: true, student, record });
 };

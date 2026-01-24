@@ -7,3 +7,4 @@ cache
 typechain-types
 npm-debug.log*
 .DS_Store
+uploads

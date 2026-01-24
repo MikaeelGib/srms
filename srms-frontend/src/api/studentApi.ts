@@ -41,13 +41,10 @@ export async function getStudentById(studentId: string): Promise<Student> {
 
 export async function registerStudent(data: {
   studentId: string;
-  name: string;               
+  name: string;
   email: string;
   department: string;
-  graduationYear: number;
-  finalGrade: string;
-  percentage: number;
-  password: string;           // temp password
+  password: string;
 }) {
   const res = await fetch(API_BASE, {
     method: "POST",
@@ -67,20 +64,38 @@ export async function registerStudent(data: {
 }
 
 /* ===========================
+   DELETE STUDENT (ADMIN + PIN)
+=========================== */
+export async function deleteStudent(
+  studentId: string,
+  adminPin: string
+) {
+  const res = await fetch(
+    `http://localhost:5000/api/students/${studentId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+        "x-admin-pin": adminPin
+      }
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Failed to delete student");
+  }
+
+  return res.json();
+}
+/* ===========================
    ISSUE CERTIFICATE (ADMIN)
-   - certificate PDF
-   - student photo
-   - graduationYear
-   - percentage
 =========================== */
 
 export async function issueCertificate(
   studentId: string,
   formData: FormData
-): Promise<{
-  recordHash: string;
-  txHash: string;
-}> {
+) {
   const res = await fetch(`${API_BASE}/${studentId}/issue`, {
     method: "POST",
     headers: {
