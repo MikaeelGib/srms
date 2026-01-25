@@ -47,6 +47,18 @@ export const buttonPrimary: React.CSSProperties = {
   cursor: "pointer"
 };
 
+export const buttonSecondary: React.CSSProperties = {
+  flex: 1,
+  padding: 12,
+  borderRadius: 12,
+  border: "none",
+  background: "linear-gradient(135deg, #38bdf8, #6366f1)",
+  color: "#fff",
+  fontWeight: 600,
+  cursor: "pointer",
+  textAlign: "center"
+};
+
 export const resultBox: React.CSSProperties = {
   marginTop: 30,
   background: "#00000055",

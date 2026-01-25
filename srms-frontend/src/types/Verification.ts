@@ -5,11 +5,9 @@ export interface VerifiedStudent {
 }
 
 export interface VerifiedRecord {
+  recordId: string;
   graduationYear: number;
-  issuedAt: string;
-  certUrl: string;
-  reportCardUrl: string;
-  photoUrl: string;
+  issueDate: string;
 }
 
 export interface VerifyResponse {
