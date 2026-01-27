@@ -49,6 +49,48 @@ const sendIfAllowed = async (
   fs.createReadStream(filePath).pipe(res);
 };
 
+// New Helper: No Auth check, just checks if record exists
+const sendPublicFile = async (
+  req: any, 
+  res: Response, 
+  filename: string, 
+  mimeType: string
+) => {
+  const { recordId } = req.params;
+
+  // Find student by the record hash (which is your recordId folder name)
+  const student = await StudentService.findByRecordHash(recordId);
+  if (!student) {
+    return res.status(404).json({ message: "Record not found" });
+  }
+
+  const filePath = path.join(
+    process.cwd(),
+    "uploads",
+    student.studentId,
+    recordId,
+    filename
+  );
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ message: "File not found" });
+  }
+
+  res.setHeader("Content-Type", mimeType);
+  res.setHeader("Content-Disposition", "inline");
+  fs.createReadStream(filePath).pipe(res);
+};
+
+// Exported Public Versions
+export const getPublicCertificate = (req: any, res: Response) => 
+  sendPublicFile(req, res, "certificate.pdf", "application/pdf");
+
+export const getPublicReportCard = (req: any, res: Response) => 
+  sendPublicFile(req, res, "reportCard.pdf", "application/pdf");
+
+export const getPublicPhoto = (req: any, res: Response) => 
+  sendPublicFile(req, res, "photo.jpg", "image/jpeg");
+
 /* ======================
    FILE ENDPOINTS
 ====================== */
