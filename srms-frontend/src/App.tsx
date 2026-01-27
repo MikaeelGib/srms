@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
@@ -13,12 +14,15 @@ import Navbar from "./components/Navbar";
 import AdminRoute from "./components/AdminRoute";
 import StudentRoute from "./components/StudentRoute";
 
+
 export default function App() {
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
+    <div className="min-h-screen bg-slate-950 text-white selection:bg-emerald-500/30">
       <Navbar />
-
+      <main>
+        <Outlet />
+      </main>
       <Routes>
         {/* ================= PUBLIC ================= */}
         <Route path="/" element={<HomePage />} />

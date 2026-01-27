@@ -1,25 +1,29 @@
 # Student Records Management System (SRMS)
 
-A blockchain-based system for issuing, storing, and verifying academic certificates in a secure and tamper-proof manner.
+A **blockchain-based academic credential system** for issuing, storing, and verifying academic certificates in a secure and tamper-proof manner.
 
 ---
 
-## 🚀 Features
+## Features
 
-### 👨‍💼 Admin
+### Admin
 - Create and manage student records
-- Issue certificates and report cards
-- Upload certificate PDF, grade report PDF, and student photo
-- Hash documents and store verification data on blockchain
+- Issue academic certificates and report cards
+- Upload:
+  - Certificate (PDF)
+  - Report Card (PDF)
+  - Student Photo (Image)
+- Hash academic documents and store verification data on blockchain
 - Generate QR codes for issued certificates
+- View records and blockchain transaction details
 
-### 👨‍🎓 Student
-- Secure login
+### Student
+- Secure authentication
 - View personal academic records
 - Access issued certificate details
 - Share QR code or certificate hash for verification
 
-### 🔍 Verifier (Public Access)
+### Verifier (Public Access)
 - Verify certificates using:
   - Certificate hash
   - QR code (file upload or camera scan)
@@ -29,13 +33,104 @@ A blockchain-based system for issuing, storing, and verifying academic certifica
   - Department
   - Graduation year
   - Issue date
-- Download certificate PDF, report card PDF, and view student photo
+- Download:
+  - Certificate (PDF)
+  - Report card (PDF)
+  - Student photo
 
 ---
 
+## Screenshots
+
+This section provides a visual walkthrough of the **Student Records Management System (SRMS)**, covering admin, student, and public verification workflows.  
+All screenshots use demo data only.
+
+---
+
+## 🏠 Home Page
+
+| Home Page |
+|----------|
+| ![Home Page](screenshots/HomePage.png) |
+
+---
+
+## 🔐 Authentication
+
+| Login Page |
+|-----------|
+| ![Login Page](screenshots/LoginPage.png) |
+
+---
+
+## 🧑‍💼 Admin Dashboard
+
+| Admin Dashboard |
+|-----------------|
+| ![Admin Dashboard](screenshots/AdminDashboard.png) |
+
+---
+
+## 📝 Admin – Register Student
+
+| Register Student |
+|------------------|
+| ![Admin Register](screenshots/AdminRegister.png) |
+
+---
+
+## 📜 Admin – Issue Certificate Flow
+
+| Select Student & Upload Files | Enter Academic Details |
+|-------------------------------|------------------------|
+| ![Issue Certificate Step 1](screenshots/AdminIssue.png) | ![Issue Certificate Step 2](screenshots/AdminIssue2.png) |
+
+| Issue Success & QR Code |
+|-------------------------|
+| ![Issue Success](screenshots/AdminIssueSuccess.png) |
+
+---
+
+## 📂 Admin – Records Management
+
+| Records Table | View Record Modal |
+|---------------|-------------------|
+| ![Admin Records](screenshots/AdminRecords.png) | ![Record Details](screenshots/AdminRecordsViewModal.png) |
+
+| Delete Confirmation |
+|---------------------|
+| ![Delete Record](screenshots/AdminRecordsDelete.png) |
+
+---
+
+## 🎓 Student Dashboard
+
+| Student Dashboard | View QR Code |
+|-------------------|--------------|
+| ![Student Dashboard](screenshots/StudentDashboard.png) | ![Student QR](screenshots/StudentDashboardViewQR.png) |
+
+---
+
+## 🔍 Public Certificate Verification
+
+| Verification Page | Verification Input |
+|-------------------|--------------------|
+| ![Verify Page](screenshots/VerifyPage.png) | ![Verify Page Input](screenshots/VerifyPage2.png) |
+
+| Verification Success | Verification Failure |
+|----------------------|----------------------|
+| ![Verify Success](screenshots/VerifyPageSuccess.png) | ![Verify Failed](screenshots/VerifyPageError.png) |
+
+---
+
+### Notes
+- Screenshots contain sample data only
+- No real student information is exposed
+- Blockchain transactions are performed on the Ethereum Sepolia testnet
+
 ## 🧱 System Architecture
 
-- Frontend: React + TypeScript
+- Frontend: React + TypeScript + Tailwind CSS
 - Backend: Node.js + Express + TypeScript
 - Database: MongoDB
 - Blockchain: Ethereum (Sepolia testnet)
@@ -44,9 +139,20 @@ A blockchain-based system for issuing, storing, and verifying academic certifica
 
 ---
 
+## Why Blockchain?
+- Traditional academic record systems are:
+  - Centralized
+  - Vulnerable to tampering
+  - Difficult to verify across institutions
+
+- This system levrages blockchain to:
+  - Guarantee immutability of credentials
+  - Enable public, trustless verification
+  - Prevent fraud without exposing sensitive documents
+
 ## 🔐 Security Model
 
-- Role-based access control (Admin / Student)
+- Role-based access control (Admin / Student) (JWT)
 - Blockchain write operations restricted to admin wallet
 - Verifiers do not require authentication
 - Documents are not stored on-chain (only hashes)
@@ -60,7 +166,7 @@ A blockchain-based system for issuing, storing, and verifying academic certifica
 - MongoDB
 - MetaMask
 - Sepolia ETH
-- Alchemy or Infura API key
+- Alchemy or Infura RPC endpoint
 
 ---
 

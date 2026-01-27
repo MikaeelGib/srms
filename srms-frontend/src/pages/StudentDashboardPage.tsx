@@ -194,14 +194,14 @@ export default function StudentDashboardPage() {
       {/* MODAL */}
       {preview && (
         <Modal onClose={() => setPreview(null)}>
-          <h3 className="text-lg font-bold mb-6 text-slate-100">{preview.title}</h3>
+          <h3 className="text-lg font-bold mb-6 text-slate-100 text-center">{preview.title}</h3>
           <img src={preview.url} className="rounded-2xl max-w-full max-h-[60vh] mx-auto border border-slate-800" />
           {preview.downloadUrl && (
             <button
               className="mt-8 w-full py-4 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-500 text-black font-bold text-sm shadow-lg hover:scale-[1.02] transition-all"
               onClick={() => downloadFile(preview.downloadUrl!, preview.filename!)}
             >
-              Download Asset
+              Download 
             </button>
           )}
         </Modal>
