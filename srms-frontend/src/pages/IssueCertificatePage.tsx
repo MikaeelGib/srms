@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { getAllStudents, issueCertificate } from "../api/studentApi";
 import type { Student } from "../types/Student";
-import * as styles from "../styles/certificateStyles";
 
 type IssueResult = {
   recordHash: string;
@@ -10,7 +9,6 @@ type IssueResult = {
 };
 
 export default function IssueCertificatePage() {
-  const navigate = useNavigate();
   const location = useLocation();
   const routedStudent = (location.state as { student?: Student })?.student;
 
@@ -26,30 +24,21 @@ export default function IssueCertificatePage() {
   const [percentage, setPercentage] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<IssueResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     getAllStudents().then(setStudents);
   }, []);
 
-  // ✅ Auto-select student when coming from RecordsPage
   useEffect(() => {
     if (routedStudent) {
       setSelectedStudent(routedStudent);
       setQuery(`${routedStudent.name} (${routedStudent.studentId})`);
     }
   }, [routedStudent]);
-
-  // ✅ Auto-redirect AFTER successful issuance
-  useEffect(() => {
-    if (result) {
-      const timer = setTimeout(() => {
-        navigate("/admin/records");
-      }, 2500); // 2.5 seconds delay
-
-      return () => clearTimeout(timer);
-    }
-  }, [result, navigate]);
 
   const filteredStudents =
     query.length < 2 || selectedStudent
@@ -60,16 +49,31 @@ export default function IssueCertificatePage() {
             s.studentId.toLowerCase().includes(query.toLowerCase())
         );
 
+  // LOGIC: Restrict Percentage to 0-100
+  const handlePercentageChange = (val: string) => {
+    if (val === "") return setPercentage("");
+    const num = parseFloat(val);
+    if (num >= 0 && num <= 100) setPercentage(val);
+  };
+
+  // LOGIC: Restrict Year to 4 digits (e.g., 2024)
+  const handleYearChange = (val: string) => {
+    if (val === "") return setGraduationYear("");
+    // Only allow digits and max 4 characters
+    if (/^\d{0,4}$/.test(val)) {
+      setGraduationYear(val);
+    }
+  };
+
   const issue = async () => {
-    if (
-      !selectedStudent ||
-      !certificate ||
-      !reportCard ||
-      !photo ||
-      !graduationYear.trim() ||
-      !percentage.trim()
-    ) {
-      return alert("All fields are required");
+    setConfirmOpen(false);
+    setError(null);
+    setResult(null);
+    setProgress(0);
+
+    if (!selectedStudent || !certificate || !reportCard || !photo || !graduationYear || !percentage) {
+      setError("All fields are required");
+      return;
     }
 
     const formData = new FormData();
@@ -81,126 +85,122 @@ export default function IssueCertificatePage() {
 
     try {
       setLoading(true);
+      setProgress(20);
+      await new Promise(r => setTimeout(r, 400));
+      setProgress(45);
       const res = await issueCertificate(selectedStudent.studentId, formData);
+      setProgress(80);
+      await new Promise(r => setTimeout(r, 300));
+      setProgress(100);
       setResult(res);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to issue certificate");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to issue certificate");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div style={styles.pageWrapper}>
-      <div style={styles.card}>
-        <h2 style={{ textAlign: "center", marginBottom: 20 }}>
-          Issue Certificate
-        </h2>
+  const numberInputClass = "rounded-xl bg-slate-800 border border-slate-700 px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all";
 
-        {/* STUDENT SEARCH */}
-        <div style={{ position: "relative", marginBottom: 20 }}>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-black flex items-center justify-center p-6 text-white">
+      <div className="w-full max-w-xl bg-slate-900/80 backdrop-blur border border-slate-700/50 rounded-2xl p-8 shadow-2xl overflow-visible">
+
+        <h2 className="text-3xl font-extrabold text-center mb-2">Issue Certificate</h2>
+        <p className="text-center text-sm text-slate-400 mb-6">Upload documents and publish to blockchain</p>
+
+        {error && <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 text-red-400 text-sm p-3">{error}</div>}
+
+        <div className="relative mb-5 z-50">
           <input
-            style={styles.input}
-            placeholder="Student name or roll number"
             value={query}
             disabled={!!selectedStudent}
-            onChange={e => {
-              setQuery(e.target.value);
-              setSelectedStudent(null);
-            }}
+            placeholder="Student name or roll number"
+            onChange={e => { setQuery(e.target.value); setSelectedStudent(null); }}
+            className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
           />
 
           {filteredStudents.length > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                right: 0,
-                background: "#fff",
-                color: "#000",
-                borderRadius: 10,
-                marginTop: 6,
-                maxHeight: 180,
-                overflowY: "auto",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-                zIndex: 10
-              }}
-            >
+            <div className="absolute top-full mt-2 w-full bg-slate-900 border border-slate-700 rounded-xl shadow-xl max-h-52 overflow-y-auto z-[9999]">
               {filteredStudents.map(s => (
-                <div
-                  key={s.studentId}
-                  style={{ padding: 10, cursor: "pointer" }}
-                  onClick={() => {
-                    setSelectedStudent(s);
-                    setQuery(`${s.name} (${s.studentId})`);
-                  }}
-                >
-                  <b>{s.name}</b>
-                  <div style={{ fontSize: 12 }}>
-                    {s.studentId} • {s.department}
-                  </div>
+                <div key={s.studentId} onClick={() => { setSelectedStudent(s); setQuery(`${s.name} (${s.studentId})`); }} className="px-4 py-3 cursor-pointer hover:bg-slate-800 transition">
+                  <div className="font-medium">{s.name}</div>
+                  <div className="text-xs text-slate-400">{s.studentId} • {s.department}</div>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* CERTIFICATE METADATA */}
-        <label style={styles.label}>Graduation Year</label>
-        <input
-          style={styles.input}
-          type="number"
-          value={graduationYear}
-          onChange={e => setGraduationYear(e.target.value)}
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <input type="number" placeholder="Graduation Year (YYYY)" value={graduationYear} onChange={e => handleYearChange(e.target.value)} className={numberInputClass} />
+          <input type="number" placeholder="Percentage (0-100)" value={percentage} onChange={e => handlePercentageChange(e.target.value)} className={numberInputClass} />
+        </div>
 
-        <label style={styles.label}>Percentage</label>
-        <input
-          style={styles.input}
-          type="number"
-          value={percentage}
-          onChange={e => setPercentage(e.target.value)}
-        />
+        <div className="mt-4 space-y-3">
+          <FileUpload label="Certificate" file={certificate} accept="application/pdf" onSelect={setCertificate} />
+          <FileUpload label="Report Card" file={reportCard} accept="application/pdf" onSelect={setReportCard} />
+          <FileUpload label="Student Photo" file={photo} accept="image/*" onSelect={setPhoto} />
+        </div>
 
-        {/* FILE INPUTS */}
-        <label style={styles.label}>Certificate PDF</label>
-        <input type="file" accept=".pdf" onChange={e => setCertificate(e.target.files?.[0] || null)} />
-
-        <label style={styles.label}>Report Card PDF</label>
-        <input type="file" accept=".pdf" onChange={e => setReportCard(e.target.files?.[0] || null)} />
-
-        <label style={styles.label}>Student Photo</label>
-        <input type="file" accept="image/*" onChange={e => setPhoto(e.target.files?.[0] || null)} />
-
-        <button
-          onClick={issue}
-          disabled={loading}
-          style={{ ...styles.buttonPrimary, opacity: loading ? 0.7 : 1 }}
-        >
+        <button onClick={() => setConfirmOpen(true)} disabled={loading} className="w-full mt-6 py-3 rounded-xl font-semibold text-black bg-gradient-to-r from-emerald-500 to-cyan-500 hover:brightness-110 transition active:scale-95 disabled:opacity-60">
           {loading ? "Issuing..." : "Issue Certificate"}
         </button>
 
-        {/* ✅ RESULT + QR CODE */}
-        {result && (
-          <div style={styles.resultBox}>
-            <p><b>Record Hash</b></p>
-            <code style={styles.code}>{result.recordHash}</code>
-
-            <p><b>Transaction Hash</b></p>
-            <code style={styles.code}>{result.txHash}</code>
-
-            <img
-              style={{ marginTop: 15 }}
-              alt="QR Code"
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${result.recordHash}`}
-            />
-
-            <p style={{ marginTop: 10, opacity: 0.8 }}>
-              Redirecting to records page…
-            </p>
+        {loading && (
+          <div className="mt-4">
+            <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
+              <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${progress}%` }} />
+            </div>
           </div>
         )}
+
+        {result && (
+          <div className="relative mt-6 p-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 text-center">
+            <div className="absolute left-0 top-0 h-full w-1 bg-emerald-500 rounded-l-xl" />
+            <p className="font-semibold">Certificate Issued Successfully</p>
+            <img className="mx-auto mt-4 bg-white p-2 rounded-lg" src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${result.recordHash}`} alt="QR" />
+            <p className="mt-3 text-xs break-all text-emerald-300 font-mono">{result.recordHash}</p>
+          </div>
+        )}
+      </div>
+
+      {confirmOpen && <ConfirmModal onCancel={() => setConfirmOpen(false)} onConfirm={issue} student={selectedStudent} year={graduationYear} percentage={percentage} />}
+    </div>
+  );
+}
+
+/* =======================
+   SUB-COMPONENTS
+======================= */
+
+function FileUpload({ label, file, accept, onSelect }: { label: string; file: File | null; accept: string; onSelect: (f: File | null) => void; }) {
+  return (
+    <label className="block cursor-pointer">
+      <div className="rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 hover:bg-slate-700 transition flex justify-between items-center text-sm">
+        <span className={file ? "text-emerald-400" : ""}>{file ? file.name : label}</span>
+        <span className="text-xs text-slate-400">{file ? "Replace" : "Select"}</span>
+      </div>
+      <input hidden type="file" accept={accept} onChange={e => onSelect(e.target.files?.[0] || null)} />
+    </label>
+  );
+}
+
+function ConfirmModal({ onCancel, onConfirm, student, year, percentage }: { onCancel: () => void; onConfirm: () => void; student: Student | null; year: string; percentage: string; }) {
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-md w-[92%] text-center">
+        <h3 className="text-xl font-bold mb-2">Confirm Issuance</h3>
+        <p className="text-sm text-slate-400 mb-4">This will permanently write to the blockchain</p>
+        <div className="text-sm text-left mb-6 space-y-1">
+          <p><b>Student:</b> {student?.name}</p>
+          <p><b>Year:</b> {year}</p>
+          <p><b>Percentage:</b> {percentage}%</p>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={onCancel} className="flex-1 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 transition">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 py-2 rounded-xl bg-emerald-500 text-black font-semibold hover:brightness-110 transition">Confirm</button>
+        </div>
       </div>
     </div>
   );

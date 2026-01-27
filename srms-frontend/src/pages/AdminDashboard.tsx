@@ -5,122 +5,117 @@ import { FiBarChart } from "react-icons/fi";
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
-  const cardBase: React.CSSProperties = {
-    borderRadius: 16,
-    padding: 30,
-    background: "#ffffff",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-    cursor: "pointer",
-    transition: "all 0.25s ease",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    minHeight: 180
-  };
-
-  const cardHover = (el: HTMLDivElement, hover: boolean) => {
-    el.style.transform = hover ? "translateY(-8px)" : "translateY(0)";
-    el.style.boxShadow = hover
-      ? "0 20px 40px rgba(0,0,0,0.12)"
-      : "0 10px 30px rgba(0,0,0,0.08)";
-  };
-
-  const iconStyle: React.CSSProperties = {
-    fontSize: 42,
-    color: "#2563eb",
-    marginBottom: 10
-  };
-
   return (
-    <div
-      style={{
-        minHeight: "calc(100vh - 70px)",
-        background: "linear-gradient(135deg, #f5f7fa, #e9eef5)",
-        padding: "60px 20px"
-      }}
-    >
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <h1 style={{ fontSize: 36, marginBottom: 10 }}>
-          Admin Dashboard
-        </h1>
-        <p style={{ color: "#555", marginBottom: 50 }}>
-          Manage students, certificates, and blockchain records
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-black text-white p-6">
+      <div className="max-w-6xl mx-auto">
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: 30
-          }}
-        >
-          {/* Register Student */}
-          <div
-            style={cardBase}
+        {/* HEADER */}
+        <div className="mb-10">
+          <h1 className="text-3xl font-extrabold tracking-tight">
+            Admin Dashboard
+          </h1>
+          <p className="text-slate-400 mt-2">
+            Manage students, certificates, and blockchain records
+          </p>
+        </div>
+
+        {/* CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {/* REGISTER STUDENT */}
+          <DashboardCard
+            icon={<LuUserPlus />}
+            title="Register Student"
+            description="Add new students with academic details"
+            action="Get started"
             onClick={() => navigate("/admin/register")}
-            onMouseEnter={e => cardHover(e.currentTarget, true)}
-            onMouseLeave={e => cardHover(e.currentTarget, false)}
-          >
-            <div>
-              <LuUserPlus style={iconStyle} />
-              <h2 style={{ margin: "10px 0 8px" }}>
-                Register Student
-              </h2>
-              <p style={{ color: "#666" }}>
-                Add new students with academic details
-              </p>
-            </div>
+          />
 
-            <span style={{ color: "#2563eb", fontWeight: 500 }}>
-              Get started →
-            </span>
-          </div>
-
-          {/* Issue Certificate */}
-          <div
-            style={cardBase}
+          {/* ISSUE CERTIFICATE */}
+          <DashboardCard
+            icon={<LuFileCheck />}
+            title="Issue Certificate"
+            description="Upload certificates & push to blockchain"
+            action="Issue now"
             onClick={() => navigate("/admin/issue")}
-            onMouseEnter={e => cardHover(e.currentTarget, true)}
-            onMouseLeave={e => cardHover(e.currentTarget, false)}
-          >
-            <div>
-              <LuFileCheck style={iconStyle} />
-              <h2 style={{ margin: "10px 0 8px" }}>
-                Issue Certificate
-              </h2>
-              <p style={{ color: "#666" }}>
-                Upload certificates & push to blockchain
-              </p>
-            </div>
+          />
 
-            <span style={{ color: "#2563eb", fontWeight: 500 }}>
-              Issue now →
-            </span>
-          </div>
-
-          {/* View Records */}
-          <div
-            style={cardBase}
+          {/* VIEW RECORDS */}
+          <DashboardCard
+            icon={<FiBarChart />}
+            title="View Students"
+            description="Browse all registered students and certificates"
+            action="View students"
             onClick={() => navigate("/admin/records")}
-            onMouseEnter={e => cardHover(e.currentTarget, true)}
-            onMouseLeave={e => cardHover(e.currentTarget, false)}
-          >
-            <div>
-              <FiBarChart style={iconStyle} />
-              <h2 style={{ margin: "10px 0 8px" }}>
-                View Students
-              </h2>
-              <p style={{ color: "#666" }}>
-                Browse all registered students and their certificates
-              </p>
-            </div>
-
-            <span style={{ color: "#2563eb", fontWeight: 500 }}>
-              View students →
-            </span>
-          </div>
+          />
         </div>
       </div>
     </div>
+  );
+}
+
+/* =======================
+   CARD COMPONENT
+======================= */
+
+function DashboardCard({
+  icon,
+  title,
+  description,
+  action,
+  onClick
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  action: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="
+        group relative text-left
+        rounded-2xl p-6
+        bg-slate-900/80 backdrop-blur
+        border border-slate-700/50
+        shadow-xl
+        transition-all duration-300
+        hover:-translate-y-2 hover:shadow-emerald-500/10
+        hover:border-emerald-500/40
+        active:scale-[0.98]
+      "
+    >
+      {/* ICON */}
+      <div className="
+        mb-4 inline-flex items-center justify-center
+        w-12 h-12 rounded-xl
+        bg-gradient-to-br from-emerald-500/20 to-cyan-500/20
+        text-emerald-400
+        text-2xl
+        transition group-hover:scale-110
+      ">
+        {icon}
+      </div>
+
+      {/* TEXT */}
+      <h2 className="text-lg font-semibold mb-1">
+        {title}
+      </h2>
+      <p className="text-sm text-slate-400 mb-6">
+        {description}
+      </p>
+
+      {/* CTA */}
+      <span className="
+        inline-flex items-center gap-1
+        text-sm font-medium
+        text-emerald-400
+        group-hover:underline
+      ">
+        {action}
+        <span className="transition-transform group-hover:translate-x-1">→</span>
+      </span>
+    </button>
   );
 }

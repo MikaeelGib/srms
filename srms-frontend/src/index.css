@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* --- ANIMATION DEFINITIONS --- */
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* --- UTILITY CLASSES --- */
+
+/* Use these in your className="..." */
+.animate-slide-up {
+    animation: slide-up 0.4s ease-out forwards;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.4s ease-out forwards;
+}
+
+/* Helper for staggered entrance */
+.delay-200 {
+    animation-delay: 200ms;
+}
+
+/* --- BASE STYLES --- */
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* Fix for the badge to prevent "flicker" before animation starts */
+.opacity-0 {
+    opacity: 0;
+}

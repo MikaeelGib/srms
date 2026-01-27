@@ -8,6 +8,7 @@ export interface VerifiedRecord {
   recordId: string;
   graduationYear: number;
   issueDate: string;
+  blockchainTxHash?: string;
 }
 
 export interface VerifyResponse {

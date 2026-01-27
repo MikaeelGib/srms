@@ -3,12 +3,10 @@ import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import VerifyCertificatePage from "./pages/VerifyCertificatePage";
-
 import AdminDashboard from "./pages/AdminDashboard";
 import RegisterStudentPage from "./pages/RegisterStudentPage";
 import IssueCertificatePage from "./pages/IssueCertificatePage";
 import RecordsPage from "./pages/RecordsPage";
-
 import StudentDashboardPage from "./pages/StudentDashboardPage";
 
 import Navbar from "./components/Navbar";
@@ -16,8 +14,9 @@ import AdminRoute from "./components/AdminRoute";
 import StudentRoute from "./components/StudentRoute";
 
 export default function App() {
+
   return (
-    <>
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
       <Navbar />
 
       <Routes>
@@ -45,7 +44,6 @@ export default function App() {
             </AdminRoute>
           }
         />
-
         <Route
           path="/admin/register"
           element={
@@ -54,7 +52,6 @@ export default function App() {
             </AdminRoute>
           }
         />
-
         <Route
           path="/admin/issue"
           element={
@@ -63,7 +60,6 @@ export default function App() {
             </AdminRoute>
           }
         />
-
         <Route
           path="/admin/records"
           element={
@@ -73,6 +69,6 @@ export default function App() {
           }
         />
       </Routes>
-    </>
+    </div>
   );
 }
