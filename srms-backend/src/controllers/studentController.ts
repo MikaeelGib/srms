@@ -85,26 +85,33 @@ export const createStudent = async (req: AuthRequest, res: Response) => {
 /* =======================
    DELETE STUDENT (ADMIN)
 ======================= */
-
 export const deleteStudent = async (req: AuthRequest, res: Response) => {
-  const adminPin = req.headers["x-admin-pin"];
-  if (adminPin !== process.env.ADMIN_DELETE_PIN) {
-    return res.status(403).json({ message: "Invalid admin PIN" });
+  const adminPassword = req.headers["x-admin-pin"] as string;
+
+  try {
+    // This now queries the AdminModel via the updated service
+    const admin = await StudentService.getAdminAuthData(req.user!.id);
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin account not found" });
+    }
+
+    // Bcrypt will now have a valid hash to compare against
+    const isMatch = await bcrypt.compare(adminPassword, admin.password);
+    
+    if (!isMatch) {
+      return res.status(403).json({ message: "Invalid admin password" });
+    }
+
+    // ... continue with student deletion ...
+    const studentId = req.params.studentId.trim();
+    // (Deletion still happens in the StudentModel)
+    await StudentService.deleteStudentByStudentId(studentId);
+    
+    res.json({ message: "Student deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
   }
-
-  const studentId = req.params.studentId.trim();
-  const student = await StudentService.getStudentByStudentId(studentId);
-
-  if (!student) return res.status(404).json({ message: "Student not found" });
-
-  if (student.records.some(r => r.status === "on-chain")) {
-    return res
-      .status(403)
-      .json({ message: "Cannot delete student with on-chain records" });
-  }
-
-  await StudentService.deleteStudentByStudentId(studentId);
-  res.json({ message: "Student deleted successfully" });
 };
 
 /* =======================

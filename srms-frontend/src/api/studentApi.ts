@@ -68,7 +68,7 @@ export async function registerStudent(data: {
 =========================== */
 export async function deleteStudent(
   studentId: string,
-  adminPin: string
+  adminPassword: string // Renamed from adminPin for clarity
 ) {
   const res = await fetch(
     `http://localhost:5000/api/students/${studentId}`,
@@ -76,14 +76,19 @@ export async function deleteStudent(
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${getToken()}`,
-        "x-admin-pin": adminPin
+        // If your backend still looks for 'x-admin-pin', keep the key as is, 
+        // but pass the password value. 
+        // If you've updated the backend, change this key to 'x-admin-password'
+        "x-admin-pin": adminPassword 
       }
     }
   );
 
   if (!res.ok) {
     const err = await res.json();
-    throw new Error(err.message || "Failed to delete student");
+    // Catch the specific PIN error message and make it user-friendly
+    const errorMessage = err.message || "Failed to delete student";
+    throw new Error(errorMessage.replace(/PIN/gi, "password"));
   }
 
   return res.json();

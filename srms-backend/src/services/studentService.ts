@@ -1,5 +1,7 @@
+import { id } from "ethers";
 import { StudentModel, IStudent } from "../models/student.model";
 import { Types } from "mongoose";
+import { AdminModel, AdminDocument} from "../models/admin.model";
 
 export const StudentService = {
   getAll: async () =>
@@ -46,5 +48,12 @@ export const StudentService = {
   findByRecordHash: async (recordHash: string) =>
     StudentModel.findOne({ "records.recordId": recordHash })
       .select("-password")
-      .lean<IStudent | null>()
+      .lean<IStudent | null>(),
+
+  getAdminAuthData: async (id: string) => {
+    if (!id || !Types.ObjectId.isValid(id)) return null;
+    
+    return await AdminModel.findById(id).lean<AdminDocument | null>();
+  },
+
 };
